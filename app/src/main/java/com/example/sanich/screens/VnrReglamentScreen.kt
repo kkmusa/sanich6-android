@@ -1,6 +1,7 @@
 package com.example.sanich.screens
 
 import android.content.Context
+import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import org.json.JSONObject
@@ -19,6 +20,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlin.math.roundToInt
+
+/** Stores only document bookmarks; available to the bundled local viewer. */
+private class VnrBookmarkStorage(context: Context) {
+    private val prefs = context.getSharedPreferences("vnr_bookmarks", Context.MODE_PRIVATE)
+    @JavascriptInterface fun read(): String = prefs.getString("pages", "[]") ?: "[]"
+    @JavascriptInterface fun write(value: String): Boolean = try {
+        val rows = org.json.JSONArray(value)
+        require(value.length <= 100_000 && rows.length() <= 207)
+        for (i in 0 until rows.length()) {
+            val row = rows.getJSONObject(i)
+            require(row.getInt("page") in 1..207 && row.getString("name").length <= 120)
+        }
+        prefs.edit().putString("pages", value).commit()
+    } catch (_: Exception) { false }
+}
 
 /** Local document viewer with an always-accessible contents shortcut and scroll progress. */
 private class VnrWebView(context: Context) : WebView(context) {
@@ -119,6 +135,9 @@ fun VnrReglamentScreen(onBack: () -> Unit) {
             factory = { context ->
                 VnrWebView(context).apply {
                     settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
+                    webChromeClient = android.webkit.WebChromeClient()
+                    addJavascriptInterface(VnrBookmarkStorage(context), "SanichBookmarks")
                     settings.allowFileAccess = true
                     settings.builtInZoomControls = true
                     settings.displayZoomControls = false
