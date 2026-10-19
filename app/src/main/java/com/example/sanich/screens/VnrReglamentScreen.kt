@@ -22,12 +22,13 @@ import androidx.compose.ui.viewinterop.AndroidView
 import kotlin.math.roundToInt
 
 /** Stores only document bookmarks; available to the bundled local viewer. */
-private class VnrBookmarkStorage(context: Context) {
+internal class VnrBookmarkStorage(context: Context) {
     private val prefs = context.getSharedPreferences("vnr_bookmarks", Context.MODE_PRIVATE)
     @JavascriptInterface fun read(): String = prefs.getString("pages", "[]") ?: "[]"
     @JavascriptInterface fun write(value: String): Boolean = try {
+        require(value.length <= 100_000)
         val rows = org.json.JSONArray(value)
-        require(value.length <= 100_000 && rows.length() <= 207)
+        require(rows.length() <= 207)
         for (i in 0 until rows.length()) {
             val row = rows.getJSONObject(i)
             require(row.getInt("page") in 1..207 && row.getString("name").length <= 120)
