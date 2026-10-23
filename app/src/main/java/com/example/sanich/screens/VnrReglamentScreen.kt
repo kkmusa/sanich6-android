@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlin.math.roundToInt
 
-/** Stores only document bookmarks; available to the bundled local viewer. */
+/** Bookmarks and reading position, available only to the bundled local viewer. */
 internal class VnrBookmarkStorage(context: Context) {
     private val prefs = context.getSharedPreferences("vnr_bookmarks", Context.MODE_PRIVATE)
     @JavascriptInterface fun read(): String = prefs.getString("pages", "[]") ?: "[]"
@@ -34,6 +34,17 @@ internal class VnrBookmarkStorage(context: Context) {
             require(row.getInt("page") in 1..207 && row.getString("name").length <= 120)
         }
         prefs.edit().putString("pages", value).commit()
+    } catch (_: Exception) { false }
+
+    @JavascriptInterface fun readView(): String = prefs.getString("reader", "null") ?: "null"
+    @JavascriptInterface fun writeView(value: String): Boolean = try {
+        require(value.length <= 1024)
+        val row = JSONObject(value)
+        require(row.getInt("page") in 1..207)
+        require(row.getDouble("fraction") in 0.0..1.0)
+        require(row.getDouble("horizontal") in 0.0..1.0)
+        require(row.getDouble("zoom") in 0.75..3.0)
+        prefs.edit().putString("reader", value).commit()
     } catch (_: Exception) { false }
 }
 
@@ -66,6 +77,17 @@ fun VnrReglamentScreen(onBack: () -> Unit) {
     var active by remember { mutableIntStateOf(0) }
     var progress by remember { mutableFloatStateOf(0f) }
     var dragging by remember { mutableStateOf(false) }
+    var zoom by remember { mutableFloatStateOf(1f) }
+    fun changeZoom(value: Float) {
+        browser?.evaluateJavascript("window.VnrReader && VnrReader.setZoom($value)") { result ->
+            result.toFloatOrNull()?.let { zoom = it }
+        }
+    }
+    fun saveAndBack() {
+        val view = browser
+        if (view == null) onBack()
+        else view.evaluateJavascript("window.VnrReader && VnrReader.save()") { onBack() }
+    }
     fun invokeSearch(script: String) {
         browser?.evaluateJavascript(script) { result ->
             try {
@@ -78,9 +100,9 @@ fun VnrReglamentScreen(onBack: () -> Unit) {
     val gold = Color(0xFFFFC400)
     val brown = Color(0xFF5C3800)
 
-    BackHandler(onBack = onBack)
+    BackHandler(onBack = ::saveAndBack)
     Column(Modifier.fillMaxSize()) {
-        CalculationTopBar("Регламент ВНР", onBack)
+        CalculationTopBar("Регламент ВНР", ::saveAndBack)
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -121,17 +143,21 @@ fun VnrReglamentScreen(onBack: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                if (query.isBlank()) "Регламент ВНР" else "Совпадение $active из $found",
-                style = MaterialTheme.typography.bodySmall
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                OutlinedButton(onClick = { changeZoom(zoom - 0.25f) }, enabled = zoom > 0.75f,
+                    contentPadding = PaddingValues(0.dp), modifier = Modifier.width(44.dp)) { Text("A−") }
+                Text("${(zoom * 100).roundToInt()}%", Modifier.padding(horizontal = 6.dp), style = MaterialTheme.typography.bodySmall)
+                OutlinedButton(onClick = { changeZoom(zoom + 0.25f) }, enabled = zoom < 3f,
+                    contentPadding = PaddingValues(0.dp), modifier = Modifier.width(44.dp)) { Text("A+") }
+            }
             Button(
-                onClick = { browser?.scrollTo(0, 0); progress = 0f },
+                onClick = { browser?.evaluateJavascript("jumpPage(2)", null) },
                 colors = ButtonDefaults.buttonColors(containerColor = gold, contentColor = brown),
                 shape = RoundedCornerShape(10.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
             ) { Text("↑ Оглавление") }
         }
+        if (query.isNotBlank()) Text("Совпадение $active из $found", Modifier.padding(horizontal = 12.dp), style = MaterialTheme.typography.bodySmall)
         AndroidView(
             factory = { context ->
                 VnrWebView(context).apply {
@@ -147,7 +173,12 @@ fun VnrReglamentScreen(onBack: () -> Unit) {
                     isHorizontalScrollBarEnabled = false
                     webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView?, url: String?) {
-                            post { refreshPosition() }
+                            post {
+                                refreshPosition()
+                                evaluateJavascript("window.VnrReader && VnrReader.getZoom()") { result ->
+                                    result.toFloatOrNull()?.let { zoom = it }
+                                }
+                            }
                         }
                     }
                     onPositionChanged = { if (!dragging) progress = it }

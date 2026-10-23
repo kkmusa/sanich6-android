@@ -1,0 +1,10 @@
+{
+  "name": "operator-dng-android-viewer-tests",
+  "private": true,
+  "scripts": {
+    "test": "node --test *.test.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

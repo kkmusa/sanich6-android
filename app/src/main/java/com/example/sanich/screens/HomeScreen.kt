@@ -93,6 +93,7 @@ fun HomeScreen(
     onFrequencyClick: () -> Unit,
     onFlowClick: () -> Unit,
     onManualDebitClick: () -> Unit,
+    onHeadAtFrequencyClick: () -> Unit,
     onTapCalculationClick: () -> Unit,
     onPrToUprClick: () -> Unit,
     onUprToApvClick: () -> Unit,
@@ -159,6 +160,12 @@ fun HomeScreen(
                         subtitle = "Перевод литров и времени замера в м³/сут",
                         iconRes = R.drawable.ic_manual_debit,
                         onClick = onManualDebitClick
+                    )
+                    MenuCard(
+                        title = "Напор на частоте",
+                        subtitle = "Пересчёт паспортного напора при 50 Гц",
+                        iconText = "H",
+                        onClick = onHeadAtFrequencyClick
                     )
                     MenuCard(
                         title = "Динамический уровень",

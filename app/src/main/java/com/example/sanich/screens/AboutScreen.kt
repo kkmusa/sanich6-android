@@ -27,6 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.sanich.R
+import com.example.sanich.BuildConfig
 
 private val AboutYellow = Color(0xFFFFC400)
 private val AboutBlack = Color(0xFF171717)
@@ -91,7 +92,7 @@ fun AboutScreen(
                 color = Color.Gray
             )
             Text(
-                text = "Версия 2.8.1",
+                text = "Версия ${BuildConfig.VERSION_NAME}",
                 modifier = Modifier.padding(top = 8.dp),
                 style = MaterialTheme.typography.bodyMedium
             )

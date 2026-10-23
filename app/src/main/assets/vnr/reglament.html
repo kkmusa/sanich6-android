@@ -12871,4 +12871,4 @@ function showMatch(m,active){const p=document.getElementById('page-'+(m.p+1));if
 function renderHits(){clearHits();if(selected<0)return;const page=matches[selected].p;for(let i=0;i<matches.length;i++){if(matches[i].p===page)showMatch(matches[i],i===selected);}}
 function runSearch(q){queryValue=q;matches=[];selected=-1;clearHits();q=q.trim().toLocaleLowerCase('ru');if(!q)return {active:0,total:0};for(let pi=0;pi<wordPages.length;pi++){const ws=wordPages[pi];for(let wi=0;wi<ws.length;wi++){const word=ws[wi];if(word[0].toLocaleLowerCase('ru').includes(q))matches.push({p:pi,x:word[1],y:word[2],w:word[3],h:word[4]});}}if(matches.length)selected=0;renderHits();return {active:selected+1,total:matches.length};}
 function nextHit(forward){if(!matches.length)return {active:0,total:0};selected=(selected+(forward?1:-1)+matches.length)%matches.length;renderHits();return {active:selected+1,total:matches.length};}
-</script><script src="bookmarks.js"></script></body></html>
+</script><script src="bookmarks.js"></script><script src="viewer-controls.js"></script></body></html>

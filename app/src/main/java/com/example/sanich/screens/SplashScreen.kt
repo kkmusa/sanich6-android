@@ -1,5 +1,7 @@
 package com.example.sanich.screens
 
+import com.example.sanich.BuildConfig
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -74,7 +76,7 @@ fun SplashScreen(onFinished: () -> Unit) {
                 color = Color(0xFF252525)
             )
             Text(
-                text = "Версия 2.8.1",
+                text = "Версия ${BuildConfig.VERSION_NAME}",
                 modifier = Modifier.padding(top = 6.dp),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF4A4A4A)

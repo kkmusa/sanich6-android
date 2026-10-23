@@ -16,8 +16,8 @@ android {
         minSdk = 24
         targetSdk = 36
 
-        versionCode = 32
-        versionName = "2.8.2"
+        versionCode = 33
+        versionName = "2.8.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -31,6 +31,7 @@ android {
 
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -38,6 +39,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -50,6 +52,9 @@ kotlin {
 }
 
 dependencies {
+
+    // java.time is used by manual measurement on supported Android 7 (API 24/25).
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 
 
     // Room база данных

@@ -25,6 +25,7 @@ private fun helpFor(title:String):HelpData? = when {
  title.contains("температур",true)->HelpData("Уставка максимальной температуры ТМС после выхода УЭЦН на установившийся режим. Берётся более жёсткое из двух ограничений.",listOf("T₁ = Tраб × 1,05","T₂ = Tмакс × 0,85","Tуставки = min(T₁; T₂)"),listOf("Tраб — фактическая установившаяся температура, °C.","Tмакс — максимально допустимая температура, °C."),listOf("Не следует механически принимать предельно допустимую температуру пластовой жидкости за безопасную температуру ПЭД."))
  title.contains("Потенциал",true)->HelpData("Оценивает среднесуточный потенциал скважины при циклической работе с учётом задержки появления подачи.",listOf("Qпот = (Q × (Tраб − Tподачи)) / (Tраб + Tост)"),listOf("Q — дебит работающей УЭЦН, м³/сут.","Tраб — время работы; Tподачи — задержка подачи; Tост — остановка."),listOf("Все времена вводятся в одинаковых единицах; Tподачи < Tраб."))
  title.contains("уров",true)->HelpData("Определяет уровень жидкости по глубине спуска, давлениям и плотности.",listOf("Hур = Hсп − 10 × (Pд − Pз) / ρ"),listOf("Hсп — глубина спуска насоса, м.","Pд — давление на приёме/датчике, ат.","Pз — давление в затрубе, ат.","ρ — плотность жидкости, г/см³."),listOf("Если задано «Удлинение», приложение сначала вычитает его из глубины спуска."))
+ title.equals("Напор на частоте",true)->HelpData("Пересчёт паспортного напора при 50 Гц на заданную рабочую частоту.",listOf("H = H₅₀ × (f / 50)²"),listOf("H — напор на рабочей частоте, м.","H₅₀ — паспортный напор при 50 Гц, м.","f — рабочая частота, Гц."),listOf("Пример: 2100 × (54 / 50)² = 2449,44 м.","Квадратичная зависимость для той же установки."))
  title.contains("частот",true)->HelpData("Оценивает необходимую частоту запуска УЭЦН при заданном уровне жидкости и напоре.",listOf("f = 50 × √((40 × 9,81 + Hур) / Hэцн)"),listOf("f — частота запуска, Гц.","Hур — уровень жидкости, м.","Hэцн — напор УЭЦН, м."),listOf("Расчётную частоту сверяют с технологическим заданием и допустимым диапазоном конкретной установки."))
  title.equals("Необходимый приток",true)->HelpData("Выберите диаметр насоса, мощность двигателя, параметры обсадной колонны и толщину стенки. Приложение покажет подходящие насосы. Выберите насос, чтобы получить необходимый приток для охлаждения ПЭД при номинальной загрузке. При необходимости укажите фактический рабочий ток и рассчитайте приток при загрузке ниже номинальной.",emptyList(),emptyList())
  title.contains("приток",true)->HelpData("Определяет приток по изменению уровня за измеренный интервал. В приложении предусмотрены три состояния эксплуатационной колонны.",listOf("Герметичный ОК: Q = (ΔH × Vкп × 1440) / t","Негерметичный ОК, слив: Q = ((ΔH × Vкп − Vнкт × Hст) × 1440) / t","После слива: Q = (ΔH × (Vкп + Vнкт) × 1440) / t"),listOf("ΔH — изменение уровня, м; Vкп — объём кольцевого пространства, м³/м.","Vнкт — удельный объём НКТ, м³/м; Hст — высота столба, м; t — время, мин.","1440 — минут в сутках."),listOf("Vкп берётся из справочника либо рассчитывается по геометрии."))
@@ -70,7 +71,17 @@ fun FormulaDisplay(formula: String) {
     val eq = formula.indexOf(" = ")
     val left = if (eq >= 0) formula.substring(0, eq + 3) else ""
     val expression = if (eq >= 0) formula.substring(eq + 3) else formula
-    if (formula.startsWith("f = 50 × √((40 × 9,81 + Hур) / Hэцн)")) {
+    if (formula == "H = H₅₀ × (f / 50)²") {
+        Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+            Text("H = H₅₀ × (", fontWeight = FontWeight.Bold)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("f", fontWeight = FontWeight.Bold)
+                HorizontalDivider(Modifier.width(28.dp), thickness = 1.5.dp, color = MaterialTheme.colorScheme.onSurface)
+                Text("50", fontWeight = FontWeight.Bold)
+            }
+            Text(")²", fontWeight = FontWeight.Bold)
+        }
+    } else if (formula.startsWith("f = 50 × √((40 × 9,81 + Hур) / Hэцн)")) {
         Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
             Text("f = 50 × √(", fontWeight = FontWeight.Bold)
             Column(Modifier.weight(1f, fill = false), horizontalAlignment = Alignment.CenterHorizontally) {
