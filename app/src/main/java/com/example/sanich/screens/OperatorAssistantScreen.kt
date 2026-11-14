@@ -126,9 +126,9 @@ fun OperatorAssistantScreen(onBack: () -> Unit) {
 
     Scaffold { paddingValues ->
         Column(Modifier.fillMaxSize().background(Color(0xFFF6F6F6)).padding(paddingValues)) {
-            CalculationTopBar(selected?.title ?: "Помощник оператора") {
+            CalculationTopBar(selected?.title ?: "Помощник оператора", onBack = {
                 if (selected != null) selected = null else onBack()
-            }
+            })
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(14.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)

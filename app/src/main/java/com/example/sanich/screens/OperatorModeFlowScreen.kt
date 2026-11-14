@@ -175,9 +175,9 @@ fun OperatorModeFlowScreen(isRamp: Boolean, onBack: () -> Unit) {
     BackHandler { if (viewing) { viewing = false; stepIndex = 0 } else onBack() }
     Scaffold { padding ->
         Column(Modifier.fillMaxSize().background(Color(0xFFF6F6F6)).padding(padding)) {
-            CalculationTopBar(if (viewing) "$station — ${if (isRamp) "Разгон" else "РИЧ"}" else if (isRamp) "Разгон" else "РИЧ") {
+            CalculationTopBar(if (viewing) "$station — ${if (isRamp) "Разгон" else "РИЧ"}" else if (isRamp) "Разгон" else "РИЧ", onBack = {
                 if (viewing) { viewing = false; stepIndex = 0 } else onBack()
-            }
+            })
             if (!viewing) {
                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Введите свои значения", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)

@@ -91,6 +91,7 @@ fun HomeScreen(
     onLevelClick: () -> Unit,
     onSpiritLevelClick: () -> Unit,
     onFrequencyClick: () -> Unit,
+    onForeignPumpClick: () -> Unit,
     onFlowClick: () -> Unit,
     onManualDebitClick: () -> Unit,
     onHeadAtFrequencyClick: () -> Unit,
@@ -178,6 +179,12 @@ fun HomeScreen(
                         subtitle = "Расчёт частоты УЭЦН",
                         icon = Icons.Default.Speed,
                         onClick = onFrequencyClick
+                    )
+                    MenuCard(
+                        title = "Иностранные УЭЦН",
+                        subtitle = "Пересчёт производительности по частоте",
+                        iconText = "DN",
+                        onClick = onForeignPumpClick
                     )
                     MenuCard(
                         title = "Потенциал скважины",

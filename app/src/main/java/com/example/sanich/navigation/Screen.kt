@@ -12,6 +12,7 @@ sealed class Screen(val route: String) {
     object Level : Screen("level")
     object SpiritLevel : Screen("spiritLevel")
     object Frequency : Screen("frequency")
+    object ForeignPump : Screen("foreignPump")
     object Flow : Screen("flow")
     object ManualDebit : Screen("manualDebit")
     object HeadAtFrequency : Screen("headAtFrequency")

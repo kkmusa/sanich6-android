@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.example.sanich.CalculationHistoryViewModel
 import com.example.sanich.HistoryEntry
 import com.example.sanich.calculator.LevelCalculator
+import com.example.sanich.calculator.FrequencyCalculator
 import com.example.sanich.ui.theme.CalculationResultYellow
 import java.util.Locale
 
@@ -44,6 +45,7 @@ fun LevelScreen(historyViewModel: CalculationHistoryViewModel, onBack: () -> Uni
     var pd by remember { mutableStateOf("") }
     var density by remember { mutableStateOf("") }
     var extension by remember { mutableStateOf("") }
+    var pumpHead by remember { mutableStateOf("") }
 
     val calculation = runCatching {
         LevelCalculator.calculate(
@@ -55,13 +57,25 @@ fun LevelScreen(historyViewModel: CalculationHistoryViewModel, onBack: () -> Uni
         )
     }
     val result = calculation.getOrNull()
+    val frequencyCalculation = if (result != null && pumpHead.isNotBlank()) runCatching {
+        FrequencyCalculator.calculate(
+            result,
+            pumpHead.toDecimal() ?: error("Введите корректный напор УЭЦН")
+        )
+    } else null
+    val frequencyResult = frequencyCalculation?.getOrNull()
+    val combinedResult = result?.let {
+        if (pumpHead.isBlank()) "${it.prettyLevel()} м"
+        else frequencyResult?.let { frequency -> "${it.prettyLevel()} м\nЧастота запуска: ${frequency.prettyLevel()} Гц" }
+    }
 
-    val currentHistoryEntry = result?.let {
+    val currentHistoryEntry: HistoryEntry? = combinedResult?.let { combined ->
         HistoryEntry(
             title = "Уровень жидкости",
-            method = "Автоматический расчёт",
-            result = "${it.prettyLevel()} м",
-            details = "Глубина=$depth м; удлинение=${extension.ifBlank { "нет" }}; Pз=$pz; Pд=$pd; плотность=$density г/см³"
+            method = if (frequencyResult == null) "Автоматический расчёт" else "Уровень + частота запуска",
+            result = combined,
+            details = "Глубина=$depth м; удлинение=${extension.ifBlank { "нет" }}; Pз=$pz; Pд=$pd; плотность=$density г/см³" +
+                if (frequencyResult != null) "; напор=$pumpHead м; частота запуска=${frequencyResult.prettyLevel()} Гц" else ""
         )
     }
     val latestHistoryEntry by rememberUpdatedState(currentHistoryEntry)
@@ -70,7 +84,7 @@ fun LevelScreen(historyViewModel: CalculationHistoryViewModel, onBack: () -> Uni
         latestHistoryEntry?.let { historyViewModel.saveSession(historySessionKey, it) }
     }
 
-    PersistHistoryOnDispose(::saveCurrentCalculation, debounceKey = result?.let { "$depth|$pz|$pd|$density|$it" })
+    PersistHistoryOnDispose(::saveCurrentCalculation, debounceKey = combinedResult?.let { "$depth|$pz|$pd|$density|$extension|$pumpHead|$it" })
 
     fun saveAndBack() {
         saveCurrentCalculation()
@@ -97,8 +111,9 @@ fun LevelScreen(historyViewModel: CalculationHistoryViewModel, onBack: () -> Uni
                 }
                 OutlinedTextField(density, { density = it.filterDecimalInput() }, label = { Text("Плотность жидкости, г/см³") }, modifier = Modifier.fillMaxWidth().keepVisibleAboveKeyboard(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = androidx.compose.ui.text.input.ImeAction.Next), keyboardActions = nextFieldKeyboardActions())
                 OutlinedTextField(extension, { extension = it.filterDecimalInput() }, label = { Text("Удлинение, м") }, supportingText = { Text("Необязательно. Если поле заполнено, значение вычитается из глубины спуска.") }, modifier = Modifier.fillMaxWidth().keepVisibleAboveKeyboard(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = androidx.compose.ui.text.input.ImeAction.Done), keyboardActions = doneFieldKeyboardActions())
-                ResultCardSimple("Уровень жидкости", result?.let { "${it.prettyLevel()} м" }, calculation.exceptionOrNull()?.message)
-                OutlinedButton(onClick = { depth=""; pz=""; pd=""; density=""; extension="" }, modifier = Modifier.fillMaxWidth()) { Text("Очистить") }
+                OutlinedTextField(pumpHead, { pumpHead = it.filterDecimalInput() }, label = { Text("Напор УЭЦН, м (необязательно)") }, supportingText = { Text("Если заполнить, приложение сразу рассчитает частоту запуска.") }, modifier = Modifier.fillMaxWidth().keepVisibleAboveKeyboard(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = androidx.compose.ui.text.input.ImeAction.Done), keyboardActions = doneFieldKeyboardActions())
+                ResultCardSimple("Уровень жидкости и запуск", combinedResult, calculation.exceptionOrNull()?.message ?: frequencyCalculation?.exceptionOrNull()?.message)
+                OutlinedButton(onClick = { depth=""; pz=""; pd=""; density=""; extension=""; pumpHead="" }, modifier = Modifier.fillMaxWidth()) { Text("Очистить") }
             }
         }
     }

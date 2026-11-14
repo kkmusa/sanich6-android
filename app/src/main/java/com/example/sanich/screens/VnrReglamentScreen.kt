@@ -1,6 +1,8 @@
 package com.example.sanich.screens
 
 import android.content.Context
+import android.app.Activity
+import android.content.pm.ActivityInfo
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -19,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.platform.LocalContext
 import kotlin.math.roundToInt
 
 /** Bookmarks and reading position, available only to the bundled local viewer. */
@@ -71,6 +74,8 @@ private class VnrWebView(context: Context) : WebView(context) {
 
 @Composable
 fun VnrReglamentScreen(onBack: () -> Unit) {
+    val activity = LocalContext.current as? Activity
+    var landscape by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     var browser by remember { mutableStateOf<VnrWebView?>(null) }
     var found by remember { mutableIntStateOf(0) }
@@ -84,6 +89,7 @@ fun VnrReglamentScreen(onBack: () -> Unit) {
         }
     }
     fun saveAndBack() {
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         val view = browser
         if (view == null) onBack()
         else view.evaluateJavascript("window.VnrReader && VnrReader.save()") { onBack() }
@@ -100,9 +106,23 @@ fun VnrReglamentScreen(onBack: () -> Unit) {
     val gold = Color(0xFFFFC400)
     val brown = Color(0xFF5C3800)
 
+    DisposableEffect(activity) {
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        onDispose { activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT }
+    }
+
     BackHandler(onBack = ::saveAndBack)
     Column(Modifier.fillMaxSize()) {
-        CalculationTopBar("Регламент ВНР", ::saveAndBack)
+        CalculationTopBar("Регламент ВНР", ::saveAndBack, actions = {
+            IconButton(onClick = {
+                landscape = !landscape
+                activity?.requestedOrientation = if (landscape) {
+                    ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                } else {
+                    ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                }
+            }) { Text("↻", style = MaterialTheme.typography.headlineSmall) }
+        })
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),

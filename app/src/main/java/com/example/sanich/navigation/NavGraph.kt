@@ -40,6 +40,7 @@ import com.example.sanich.screens.AppBottomBar
 import com.example.sanich.screens.AboutScreen
 import com.example.sanich.screens.HeadAtFrequencyScreen
 import com.example.sanich.screens.FrequencyScreen
+import com.example.sanich.screens.ForeignPumpScreen
 import com.example.sanich.screens.HistoryScreen
 import com.example.sanich.screens.HomeScreen
 import com.example.sanich.screens.TechnologistScreen
@@ -145,6 +146,7 @@ fun AppNavigation(repository: PedRepository, historyDao: HistoryDao) {
                 onLevelClick = { openFreshCalculator(Screen.Level.route) },
                 onSpiritLevelClick = { navController.navigate(Screen.SpiritLevel.route) },
                 onFrequencyClick = { openFreshCalculator(Screen.Frequency.route) },
+                onForeignPumpClick = { openFreshCalculator(Screen.ForeignPump.route) },
                 onFlowClick = { openFreshCalculator(Screen.Flow.route) },
                 onManualDebitClick = { openFreshCalculator(Screen.ManualDebit.route) },
                 onHeadAtFrequencyClick = { openFreshCalculator(Screen.HeadAtFrequency.route) },
@@ -234,6 +236,12 @@ fun AppNavigation(repository: PedRepository, historyDao: HistoryDao) {
         }
         composable(Screen.Frequency.route) {
             FrequencyScreen(
+                historyViewModel = historyViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.ForeignPump.route) {
+            ForeignPumpScreen(
                 historyViewModel = historyViewModel,
                 onBack = { navController.popBackStack() }
             )

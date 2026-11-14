@@ -64,9 +64,9 @@ fun StationModesScreen(onBack: () -> Unit) {
     BackHandler { when { mode != null -> mode = null; station != null -> station = null; else -> onBack() } }
     Scaffold { pv ->
         Column(Modifier.fillMaxSize().background(Color(0xFFF6F6F6)).padding(pv)) {
-            CalculationTopBar(mode ?: station?.name ?: "Разгон и РИЧ") {
+            CalculationTopBar(mode ?: station?.name ?: "Разгон и РИЧ", onBack = {
                 when { mode != null -> mode = null; station != null -> station = null; else -> onBack() }
-            }
+            })
             Column(Modifier.fillMaxSize().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 when {
                     station == null -> {
