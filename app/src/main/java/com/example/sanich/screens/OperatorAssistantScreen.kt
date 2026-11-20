@@ -5,9 +5,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -26,7 +28,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-private data class AssistantTopic(val title: String, val steps: List<String>, val preserveFormatting: Boolean = false)
+private data class AssistantTopic(
+    val title: String,
+    val steps: List<String>,
+    val preserveFormatting: Boolean = false,
+    val overloadRows: List<Pair<String, String>> = emptyList()
+)
 
 private val assistantTopics = listOf(
     AssistantTopic("Отбор проб", listOf(
@@ -36,11 +43,22 @@ private val assistantTopics = listOf(
         "Перед набором представительной пробы предварительную порцию направляют в предусмотренную для этого закрытую или безопасную дренажную систему согласно утверждённому регламенту. Объём предварительной проливки уточнить по местной инструкции.",
         "При низкой обводнённости возможно образование пены. Способ её удаления и допустимую степень заполнения ёмкости определять по утверждённой методике."
     ), preserveFormatting = true),
-    AssistantTopic("Отключение по перегрузке", listOf(
-        "Зафиксировать время и рабочую частоту, при которой произошла остановка.",
-        "Дождаться окончания слива столба жидкости из НКТ и прекращения турбинного вращения.",
-        "Проверить возможные причины: сопротивление вращению насоса, напряжение ТМПН, мощность ПЭД, изоляцию.",
-        "Повторные пуски и режимы расклинки выполнять только в установленном порядке; между попытками обеспечить охлаждение ПЭД."
+    AssistantTopic("Остановки по ЗП", listOf(
+        "Возможные причины ЗП: повышенное сопротивление вращению вала из-за засорения или отложений; неверно выбранное выходное напряжение ТМПН; снижение сопротивления изоляции системы «кабель — ПЭД»; недостаточная мощность ПЭД; турбинное вращение УЭЦН.",
+        "Открыть архив станции управления, определить причину срабатывания ЗП и момент остановки. Отметить, на каком участке рабочего цикла она произошла: в начале, середине или ближе к окончанию.",
+        "Выписать контрольные параметры непосредственно перед остановкой: частоту, ток по фазам, загрузку, напряжение, давление и остальные доступные значения.",
+        "На фонтанной арматуре убедиться, что задвижки, необходимые для нормальной работы скважины, находятся в открытом положении.",
+        "Проверить наличие турбинного вращения. По станции управления признаком служит отрицательная частота F. Дополнительная проверка по устью: на остановленной скважине закрыть манифольдную задвижку и в течение 10–20 минут наблюдать за изменением буферного давления.",
+        "Если турбинное вращение отсутствует, выполнить пробный запуск с пониженной частоты. При признаках клина изменить направление вращения и выполнить пробный запуск на 40 Гц.",
+        "После успешного запуска проконтролировать следующий рабочий цикл и обязательно подтвердить наличие подачи.",
+        "Передать технологической службе причину ЗП, архивные параметры, результат пробного запуска и сведения о наличии подачи.",
+        "Сообщить оператору ПУ точное время остановки и последующего запуска скважины."
+    ), overloadRows = listOf(
+        "1,1" to "60 минут",
+        "1,2" to "10 минут",
+        "1,3" to "5 минут",
+        "1,4" to "2 минуты",
+        "1,5" to "1 минута"
     )),
     AssistantTopic("Срыв подачи", listOf(
         "Проверь скважину на герметичность ОК.",
@@ -149,6 +167,20 @@ fun OperatorAssistantScreen(onBack: () -> Unit) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             selected!!.steps.forEachIndexed { index, step ->
                                 Text(if (selected!!.preserveFormatting) step else "${index + 1}. $step")
+                            }
+                            if (selected!!.overloadRows.isNotEmpty()) {
+                                Text("Допустимое время работы ПЭД при превышении номинального тока", fontWeight = FontWeight.Bold)
+                                Row(Modifier.fillMaxWidth()) {
+                                    Text("Перегрузка", Modifier.weight(1f), fontWeight = FontWeight.Bold)
+                                    Text("Допустимое время", Modifier.weight(1f), fontWeight = FontWeight.Bold)
+                                }
+                                selected!!.overloadRows.forEach { row ->
+                                    Row(Modifier.fillMaxWidth()) {
+                                        Text(row.first, Modifier.weight(1f))
+                                        Text(row.second, Modifier.weight(1f))
+                                    }
+                                }
+                                Text("Коэффициент показывает отношение фактического тока к номинальному току ПЭД.")
                             }
                         }
                     }
